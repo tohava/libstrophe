@@ -104,6 +104,8 @@
 #define LDOUBLE double
 #endif
 
+#include "common.h"
+
 int xmpp_snprintf (char *str, size_t count, const char *fmt, ...);
 int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
 
@@ -759,6 +761,70 @@ int xmpp_snprintf (va_alist) va_dcl
   return total;
 }
 #endif /* !HAVE_SNPRINTF */
+
+#ifdef HAVE_STDARGS
+xmpp_sized_string_t xmpp_snprintf_heap(xmpp_ctx_t *ctx,
+                                       char *buf,
+                                       size_t size,
+                                       const char *fmt, ...)
+#else
+xmpp_sized_string_t xmpp_snprintf_heap(va_alist) va_dcl
+#endif
+{
+#ifndef HAVE_STDARGS
+    xmpp_ctx_t *ctx,
+    char *buf,
+    size_t size,
+    const char *fmt,
+#endif
+    VA_LOCAL_DECL;
+    xmpp_sized_string_t ret;
+
+    VA_START (fmt);
+    VA_SHIFT (ctx, xmpp_ctx_t *);
+    VA_SHIFT (buf, char *);
+    VA_SHIFT (size, size_t);
+    VA_SHIFT (fmt, char *);
+    ret = xmpp_vsnprintf_heap(ctx, buf, size, fmt, ap);
+    VA_END;
+    return ret;
+}
+
+xmpp_sized_string_t xmpp_vsnprintf_heap(xmpp_ctx_t *ctx,
+                                        char *buf,
+                                        size_t size,
+                                        const char *fmt,
+                                        va_list ap)
+{
+    xmpp_sized_string_t ret;
+    size_t len;
+    char *bigbuf;
+
+    len = xmpp_vsnprintf(buf, 1024, fmt, ap);
+
+    if (len >= 1024) {
+	/* we need more space for this data, so we allocate a big 
+	 * enough buffer and print to that */
+	len++; /* account for trailing \0 */
+	bigbuf = xmpp_alloc(ctx, len);
+	if (!bigbuf) {
+	    xmpp_debug(ctx, "xmpp", "Could not allocate memory for send_raw_string");
+            ret.len = 1;
+            ret.buf = "";
+	    return ret;
+	}
+	xmpp_vsnprintf(bigbuf, len, fmt, ap);
+
+        ret.len = len;
+        ret.buf = bigbuf;
+        return ret;
+    } else {
+        ++len;
+        ret.len = len;
+        ret.buf = buf;
+        return ret;
+    }
+}
 
 #ifdef TEST_SNPRINTF
 #ifndef LONG_STRING

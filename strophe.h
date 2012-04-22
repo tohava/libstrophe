@@ -207,7 +207,10 @@ typedef void (*xmpp_conn_handler)(xmpp_conn_t * const conn,
 				  xmpp_stream_error_t * const stream_error,
 				  void * const userdata);
 
+struct event_base;
+                  
 xmpp_conn_t *xmpp_conn_new(xmpp_ctx_t * const ctx);
+xmpp_conn_t *xmpp_conn_ev_new(xmpp_ctx_t * const ctx, struct event_base *base);
 xmpp_conn_t * xmpp_conn_clone(xmpp_conn_t * const conn);
 int xmpp_conn_release(xmpp_conn_t * const conn);
 

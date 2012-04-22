@@ -149,6 +149,7 @@ struct _xmpp_handlist_t {
 #define SASL_MASK_ANONYMOUS 0x04
 
 typedef void (*xmpp_open_handler)(xmpp_conn_t * const conn);
+typedef struct xmppevent xev_t;
 
 struct _xmpp_conn_t {
     unsigned int ref;
@@ -181,6 +182,8 @@ struct _xmpp_conn_t {
     char *bound_jid;
     char *stream_id;
 
+    xev_t *xev;
+    
     /* send queue and parameters */
     int blocking_send;
     int send_queue_max;
@@ -218,7 +221,10 @@ void conn_disconnect_clean(xmpp_conn_t * const conn);
 void conn_open_stream(xmpp_conn_t * const conn);
 void conn_prepare_reset(xmpp_conn_t * const conn, xmpp_open_handler handler);
 void conn_parser_reset(xmpp_conn_t * const conn);
-
+void conn_ev_send_raw(xev_t * const xev,
+                      const char * const data, const size_t len);
+void conn_ev_add_connect_handler(xev_t *xev);
+void conn_ev_xev_free(xmpp_conn_t * const conn);
 
 typedef enum {
     XMPP_STANZA_UNKNOWN,
@@ -268,8 +274,15 @@ void disconnect_mem_error(xmpp_conn_t * const conn);
 /* auth functions */
 void auth_handle_open(xmpp_conn_t * const conn);
 
+typedef struct _xmpp_sized_string_t xmpp_sized_string_t;
+struct _xmpp_sized_string_t {
+    size_t len;
+    char *buf;
+};
+
 /* replacement snprintf and vsnprintf */
 int xmpp_snprintf (char *str, size_t count, const char *fmt, ...);
 int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-
+xmpp_sized_string_t xmpp_snprintf_heap(xmpp_ctx_t *ctx, char *stack_buf, size_t size, const char *fmt, ...);
+xmpp_sized_string_t xmpp_vsnprintf_heap(xmpp_ctx_t *ctx, char *stack_buf, size_t size, const char *fmt, va_list arg);
 #endif /* __LIBSTROPHE_COMMON_H__ */

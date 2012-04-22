@@ -8,13 +8,13 @@ PARSER_LIBS=@PARSER_LIBS@
 SSL_LIBS = -lssl -lcrypto -lz
 
 STROPHE_FLAGS = -I$(top_srcdir)
-STROPHE_LIBS = libstrophe.a $(PARSER_LIBS) $(SSL_LIBS)
+STROPHE_LIBS = libstrophe.a $(PARSER_LIBS) $(SSL_LIBS) -levent -levent_openssl
 
 ## Main build targets
 lib_LIBRARIES = libstrophe.a
 
 libstrophe_a_CFLAGS=$(STROPHE_FLAGS) $(PARSER_CFLAGS)
-libstrophe_a_SOURCES = src/auth.c src/conn.c src/ctx.c \
+libstrophe_a_SOURCES = src/auth.c src/conn.c src/conn_ev.c src/ctx.c \
 	src/event.c src/handler.c src/hash.c \
 	src/jid.c src/md5.c src/sasl.c src/sha1.c \
 	src/snprintf.c src/sock.c src/stanza.c src/thread.c \
